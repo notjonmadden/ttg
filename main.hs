@@ -11,18 +11,6 @@ getSaveFile :: String -> FilePath
 getSaveFile charName =
     saveFolder ++ "/" ++ (map toLower charName) ++ ".txt"
 
-enterNewCharacter :: IO (Maybe Character)
-enterNewCharacter = do
-    putStrLn "Name:"
-    name <- getLine
-    putStrLn "Class: (Jedi, Soldier, Scout, Scoundrel, or Noble)"
-    className <- getLine
-
-    case parseClass className of
-        Just c -> return (Just (createCharacter name c))
-        Nothing -> return Nothing
-
-
 main = do
     args <- getArgs
     case args of
@@ -35,7 +23,7 @@ main = do
                 Nothing -> putStrLn "Bad class"
                 
         ["delete", charName] ->
-            putStrLn ("loading " ++ charName ++ "...")
+            delete (getSaveFile charName)
 
         ["see", charName] -> do
             char <- load (getSaveFile charName)
@@ -44,7 +32,7 @@ main = do
         ["givex", charName, amount] -> do
             char <- load (getSaveFile charName)
             let mChar = giveExperience (read amount) char in do
-                save (getSaveFile charName) char
+                save (getSaveFile charName) mChar
                 putStrLn $ show mChar
 
         [] -> putStrLn "No command"
