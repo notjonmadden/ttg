@@ -1,14 +1,13 @@
-module Persistence(save, load) where
+module Persistence(save, load, delete) where
     import Character
     import Data.List.Split
-    -- import System.IO.Strict 
+    import System.IO.Strict(readFile)
     import System.IO(
         Handle,
-        IOMode(ReadMode, AppendMode),
+        IOMode(AppendMode),
         withFile,
-        readFile,
         hPutStrLn)
-    import System.Directory (doesFileExist)
+    import System.Directory (doesFileExist, removeFile)
     
     data Field = Name String | Class String | Level String | Experience String
         deriving (Show)
@@ -32,10 +31,7 @@ module Persistence(save, load) where
             fWrite ("Class=" ++ (getClassName (cClass c)))
             fWrite ("Level=" ++ (show $ level c))
             fWrite ("Experience=" ++ (show $ experience c))
-
-    serialize :: Character -> String
-    serialize c =
-        unlines []
+            putStrLn "Wrote!"
 
     readField :: String -> Field
     readField line = 
@@ -56,11 +52,20 @@ module Persistence(save, load) where
 
     load :: FilePath -> IO Character
     load fp = do
-        s <- readFile fp
+        s <- System.IO.Strict.readFile fp
         let fields = readFields s in
             return $ foldl applyField stub fields
         
     save :: FilePath -> Character -> IO ()
     save fp c =
-        let writeCharacter = write c in
-            withFile fp AppendMode writeCharacter
+        let writeCharacter = write c in do
+            fileExists <- doesFileExist fp
+            if fileExists then do
+                removeFile fp
+                withFile fp AppendMode writeCharacter
+            else do
+                withFile fp AppendMode writeCharacter
+
+    delete :: FilePath -> IO ()
+    delete =
+        removeFile
